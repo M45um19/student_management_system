@@ -2,7 +2,7 @@
 
 A focused, production-grade web application built for **Registry Administrators** to handle the core day-to-day administrative workflows of higher education: **Student Enrolment**, **Fees & Payments**, **Assessment Submissions**, and **Marksheets & Results**.
 
-Built with a modular, **feature-driven architecture** using **Next.js 14+ (App Router)**, **PostgreSQL**, **Prisma ORM**, **Tailwind CSS**, and **JWT Authentication (Access & Refresh Tokens)**.
+Built with a modular, **feature-driven architecture** using **Next.js 16 (App Router, Turbopack)**, **React 19**, **PostgreSQL**, **Prisma ORM**, **Tailwind CSS v4**, **TanStack Query**, and **JWT Authentication (Access & Refresh Tokens)**.
 
 ---
 
@@ -247,53 +247,65 @@ classDiagram
 
 ## Tech Stack
 
-* **Framework:** Next.js 14+ (App Router, Route Handlers, Server Actions)
+* **Framework:** Next.js 16 (App Router, Turbopack, Edge Proxy Middleware)
+* **Library:** React 19
 * **Language:** TypeScript
-* **Database & ORM:** PostgreSQL + Prisma ORM
-* **Authentication:** JWT with Access + Refresh Token rotation (stored in `httpOnly` cookies)
-* **Styling:** Tailwind CSS
+* **State & Query Cache:** TanStack React Query v5
+* **Database & ORM:** PostgreSQL + Prisma ORM (v6) with time-ordered **UUIDv7** primary keys
+* **Authentication:** Dual-token JWT (`jose`) with Access + DB-backed Refresh Token rotation in `httpOnly` cookies
+* **HTTP Client:** Axios (with automated 401 refresh token interceptor)
+* **Styling:** Tailwind CSS v4
+* **Icons:** Lucide React
 * **Validation:** Zod schemas
 
 ---
 
 ## Project Structure
 
-```text
-README.md                       # Quick Start, Getting Started, Architecture Overview, and AI Usage
-.env.example                    # Environment variables template
+The codebase follows a **Scalable Feature-Driven Architecture**. Regardless of whether the system contains 2 features or 100 features, every domain boundary adheres to a standardized, modular blueprint:
 
+```text
 src/
-├── app/                        # ROUTING LAYER (Next.js App Router: layout.tsx, page.tsx, API route handlers)
-│   ├── api/                    # Backend API endpoints (modularized by resource)
-│   │   └── [resource-name]/    # Resource collection endpoints (GET list, POST create)
-│   │       ├── route.ts
-│   │       └── [id]/           # Dynamic resource item endpoints (GET single, PUT/PATCH update, DELETE)
-│   │           └── route.ts
-│   ├── (group-name)/           # Route group for isolated layouts (Staff & Student views)
-│   └── page.tsx                # Root page
-├── components/                 # GLOBAL PURE UI (Shared presentation primitives: Button, Modal, Table, etc.)
-├── features/                   # THE CORE DOMAIN (Business boundaries isolated cleanly by feature)
-│   └── [feature-name]/         # Modular domain feature (repeat as needed)
-│       ├── components/         # UI blocks specific to this feature
-│       ├── hooks/              # Feature-specific custom hooks
-│       ├── services/           # Unified API contracts (fetch/client requests)
-│       ├── utils/              # Pure helper functions for this feature
-│       └── types/              # Domain types and interfaces
-├── lib/                        # CORE CONFIGURATIONS & SERVICES (Prisma client, Auth configuration)
-├── hooks/                      # GLOBAL UI HOOKS (App-wide general UI hooks)
-└── types/                      # GLOBAL TYPES (Shared core TypeScript interfaces)
+├── app/                        # ROUTING LAYER (Next.js App Router)
+│   ├── (route-groups)/         # Route groups for isolated layouts & role access
+│   ├── api/                    # Backend API route handlers (REST endpoints)
+│   │   └── [resource]/         # Resource endpoints (collection GET/POST, item dynamic routes)
+│   ├── layout.tsx              # Root HTML shell & global providers
+│   ├── page.tsx                # Application root / landing entry point
+│   └── globals.css             # Global styling & Tailwind directives
+│
+├── components/                 # APPLICATION UI LAYER (Pure presentation & application shell)
+│   ├── dashboard/              # Role/portal overview landing views & summary widgets
+│   ├── layout/                 # Application shell (responsive sidebars, headers, navigations)
+│   ├── shared/                 # Reusable UI primitives (buttons, modals, badges, cards, tables)
+│   └── providers/              # Global React context & client-side state providers
+│
+├── features/                   # FEATURE MODULES (Self-contained domain boundaries)
+│   └── [feature-name]/         # Standardized domain module (repeatable for N features)
+│       ├── components/         # UI components localized strictly to this feature
+│       ├── hooks/              # Custom React / query hooks managing feature state
+│       ├── services/           # API contracts, fetchers & network communication
+│       ├── types/              # Domain TypeScript interfaces & Zod validation schemas
+│       ├── utils/              # Feature-specific business rules & calculation helpers
+│       └── index.ts            # Public barrel export for clean inter-feature imports
+│
+├── lib/                        # SHARED INFRASTRUCTURE (Global singletons & utilities)
+│   └── [utility-name].ts       # Database client, auth helpers, HTTP interceptors, constants
+│
+└── proxy.ts                    # Edge route guard proxy / middleware (authentication & RBAC)
 
 prisma/
-├── schema.prisma               # Database schema configuration
-└── seed.ts                     # Database seeding script
+├── schema.prisma               # Database models, relations & indexes
+└── seed.ts                     # Database seeding script & evaluation fixtures
 
-docs/                           # TECHNICAL DOCUMENTATION HUB (For developers & AI context)
-├── index.md                    # Documentation Hub Index & Master Architecture Blueprint
-└── features/                   # Feature-specific technical documentation
-    └── [feature-name]/         # Feature documentation (overview.md, api.md, components.md)
-        ├── overview.md         # Business logic and user workflows for this feature
-        ├── api.md              # API endpoints, request/response contracts for this feature
-        └── components.md       # Key UI components and state management specific to this feature
+docs/                           # TECHNICAL DOCUMENTATION HUB
+├── index.md                    # Architecture blueprint & master documentation index
+├── components/                 # Application UI specifications & design guidelines
+└── features/                   # Modular domain technical specifications
+    └── [feature-name]/         # Universal 3-file specification per feature:
+        ├── overview.md         # Domain business rules, permissions & sequence workflows
+        ├── api.md              # REST contracts, payload schemas & response codes
+        └── components.md       # UI component hierarchy, local state & hook integrations
 ```
 
 ---
