@@ -12,15 +12,21 @@ export async function GET(req: NextRequest) {
     if (accessToken) {
       const payload = await verifyAccessToken(accessToken);
       if (payload) {
+        const userPayload = {
+          id: payload.userId,
+          email: payload.email,
+          role: payload.role,
+          name: payload.name,
+          staffId: payload.staffId,
+          studentId: payload.studentId,
+        };
+
         return NextResponse.json({
-          authenticated: true,
-          user: {
-            id: payload.userId,
-            email: payload.email,
-            role: payload.role,
-            name: payload.name,
-            staffId: payload.staffId,
-            studentId: payload.studentId,
+          success: true,
+          message: 'Active session retrieved successfully',
+          data: userPayload,
+          meta: {
+            authenticated: true,
           },
         });
       }
@@ -30,7 +36,12 @@ export async function GET(req: NextRequest) {
     const refreshToken = req.cookies.get(COOKIES.REFRESH_TOKEN)?.value;
     if (!refreshToken) {
       return NextResponse.json(
-        { authenticated: false, user: null },
+        {
+          success: false,
+          message: 'No active session found',
+          data: null,
+          meta: { authenticated: false },
+        },
         { status: 401 }
       );
     }
@@ -38,7 +49,12 @@ export async function GET(req: NextRequest) {
     const refreshPayload = await verifyRefreshToken(refreshToken);
     if (!refreshPayload) {
       return NextResponse.json(
-        { authenticated: false, user: null },
+        {
+          success: false,
+          message: 'Refresh token invalid or expired',
+          data: null,
+          meta: { authenticated: false },
+        },
         { status: 401 }
       );
     }
@@ -54,27 +70,43 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { authenticated: false, user: null },
+        {
+          success: false,
+          message: 'Session user account not found',
+          data: null,
+          meta: { authenticated: false },
+        },
         { status: 401 }
       );
     }
 
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.staff?.fullName || user.student?.fullName,
+      staffId: user.staff?.staffId,
+      studentId: user.student?.studentId,
+      department: user.staff?.department,
+    };
+
     return NextResponse.json({
-      authenticated: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name: user.staff?.fullName || user.student?.fullName,
-        staffId: user.staff?.staffId,
-        studentId: user.student?.studentId,
-        department: user.staff?.department,
+      success: true,
+      message: 'Active session retrieved successfully',
+      data: userPayload,
+      meta: {
+        authenticated: true,
       },
     });
   } catch (error) {
     console.error('Session check error:', error);
     return NextResponse.json(
-      { authenticated: false, user: null },
+      {
+        success: false,
+        message: 'Internal error checking user session',
+        data: null,
+        meta: { authenticated: false },
+      },
       { status: 500 }
     );
   }

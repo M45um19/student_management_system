@@ -26,7 +26,12 @@ export const authService = {
       const response = await api.get<SessionResponse>('/api/auth/me');
       return response.data;
     } catch {
-      return { authenticated: false, user: null };
+      return {
+        success: false,
+        message: 'Unauthenticated',
+        data: null,
+        meta: { authenticated: false },
+      };
     }
   },
 

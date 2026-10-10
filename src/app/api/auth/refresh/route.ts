@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     if (!rawRefreshToken) {
       return NextResponse.json(
-        { success: false, message: 'Refresh token not found' },
+        { success: false, message: 'Refresh token not found', data: null },
         { status: 401 }
       );
     }
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const verified = await verifyRefreshToken(rawRefreshToken);
     if (!verified) {
       return NextResponse.json(
-        { success: false, message: 'Invalid or expired refresh token' },
+        { success: false, message: 'Invalid or expired refresh token', data: null },
         { status: 401 }
       );
     }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       }
 
       const res = NextResponse.json(
-        { success: false, message: 'Refresh token is no longer valid' },
+        { success: false, message: 'Refresh token is no longer valid', data: null },
         { status: 401 }
       );
       res.cookies.delete(COOKIES.ACCESS_TOKEN);
@@ -98,17 +98,19 @@ export async function POST(req: NextRequest) {
 
     // 7. Update cookies
     const isProduction = process.env.NODE_ENV === 'production';
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name,
+      staffId,
+      studentId,
+    };
+
     const response = NextResponse.json({
       success: true,
       message: 'Token refreshed successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name,
-        staffId,
-        studentId,
-      },
+      data: userPayload,
     });
 
     response.cookies.set(COOKIES.ACCESS_TOKEN, newAccessToken, {
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Refresh token error:', error);
     return NextResponse.json(
-      { success: false, message: 'Internal error during token refresh' },
+      { success: false, message: 'Internal error during token refresh', data: null },
       { status: 500 }
     );
   }

@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { signAccessToken, signRefreshToken, hashToken } from '@/lib/jwt';
 import { COOKIES, TOKEN_EXPIRY } from '@/lib/constants';
+import { apiError } from '@/lib/api-response';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -16,10 +17,7 @@ export async function POST(req: NextRequest) {
     const validation = loginSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { success: false, message: validation.error.issues[0]?.message || 'Invalid credentials format' },
-        { status: 400 }
-      );
+      return apiError(validation.error.issues[0]?.message || 'Invalid credentials format', 400);
     }
 
     const { email, password } = validation.data;
@@ -34,19 +32,13 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return apiError('Invalid email or password', 401);
     }
 
     // 2. Validate password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return apiError('Invalid email or password', 401);
     }
 
     // 3. Prepare payload info
@@ -78,19 +70,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Set HTTP-Only cookies
+    // 6. Set HTTP-Only cookies with standard response shape
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name,
+      staffId,
+      studentId,
+      department,
+    };
+
     const response = NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name,
-        staffId,
-        studentId,
-        department,
-      },
+      data: userPayload,
     });
 
     const isProduction = process.env.NODE_ENV === 'production';
@@ -114,9 +108,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { success: false, message: 'An internal error occurred during authentication.' },
-      { status: 500 }
-    );
+    return apiError('An internal error occurred during authentication.', 500);
   }
 }

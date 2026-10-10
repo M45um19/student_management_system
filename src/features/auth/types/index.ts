@@ -17,11 +17,16 @@ export interface LoginCredentials {
 
 export interface AuthResponse {
   success: boolean;
-  message?: string;
-  user?: AuthUser;
+  message: string;
+  data: AuthUser | null;
+  meta?: Record<string, unknown>;
 }
 
 export interface SessionResponse {
-  authenticated: boolean;
-  user: AuthUser | null;
+  success: boolean;
+  message: string;
+  data: AuthUser | null;
+  meta?: {
+    authenticated: boolean;
+  };
 }
