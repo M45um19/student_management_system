@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STAFF
+  STUDENT
+}
+
+enum EnrolmentStatus {
+  ENROLLED
+  DEFERRED
+  WITHDRAWN
+  COMPLETED
+}
+
+model User {
+  id           String        @id @default(uuid(7))
+  email        String        @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  refreshTokens RefreshToken[]
+  staff         Staff?
+  student       Student?
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid(7))
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Staff {
+  id         String   @id @default(uuid(7))
+  staffId    String   @unique
+  fullName   String
+  department String
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  createdProgrammes  Programme[]
+  createdAssessments Assessment[]
+  recordedPayments   Payment[]
+  awardedGrades      Grade[]
+}
+
+model Programme {
+  id          String   @id @default(uuid(7))
+  code        String   @unique
+  name        String
+  tuitionFee  Float
+  createdById String?
+  createdBy   Staff?   @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students    Student[]
+  assessments Assessment[]
+
+  @@index([createdById])
+}
+
+model Student {
+  id           String          @id @default(uuid(7))
+  studentId    String          @unique
+  fullName     String
+  email        String          @unique
+  dateOfBirth  DateTime
+  academicYear String
+  status       EnrolmentStatus @default(ENROLLED)
+  programmeId  String
+  programme    Programme       @relation(fields: [programmeId], references: [id])
+  userId       String?         @unique
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  payments    Payment[]
+  submissions Submission[]
+  grades      Grade[]
+
+  @@index([fullName])
+  @@index([status])
+  @@index([programmeId])
+}
+
+model Payment {
+  id           String   @id @default(uuid(7))
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  recordedById String?
+  recordedBy   Staff?   @relation(fields: [recordedById], references: [id])
+  amount       Float
+  paymentDate  DateTime @default(now())
+  referenceNo  String   @unique
+  createdAt    DateTime @default(now())
+
+  @@index([studentId])
+  @@index([recordedById])
+  @@index([paymentDate])
+}
+
+model Assessment {
+  id          String   @id @default(uuid(7))
+  title       String
+  module      String
+  deadline    DateTime
+  programmeId String
+  programme   Programme @relation(fields: [programmeId], references: [id])
+  createdById String?
+  createdBy   Staff?    @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  submissions Submission[]
+  grades      Grade[]
+
+  @@index([programmeId])
+  @@index([createdById])
+  @@index([deadline])
+}
+
+model Submission {
+  id           String     @id @default(uuid(7))
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  fileName     String
+  submittedAt  DateTime   @default(now())
+  isLate       Boolean    @default(false)
+  grade        Grade?
+
+  @@unique([assessmentId, studentId])
+  @@index([studentId])
+  @@index([isLate])
+}
+
+model Grade {
+  id           String      @id @default(uuid(7))
+  assessmentId String
+  assessment   Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submissionId String?     @unique
+  submission   Submission? @relation(fields: [submissionId], references: [id])
+  gradedById   String?
+  gradedBy     Staff?      @relation(fields: [gradedById], references: [id])
+  numericGrade Float
+  classification String   // Pass, Merit, Distinction, Fail
+  isPublished  Boolean     @default(false)
+  publishedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([assessmentId, studentId])
+  @@index([studentId, isPublished])
+  @@index([gradedById])
+}
