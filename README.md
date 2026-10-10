@@ -1,45 +1,119 @@
-# Student Management System - Registry Module
+# Student Management System — Registry Module
 
-A focused web application built for Registry Administrators to handle the core day-to-day administrative workflows of a student management system. Designed with a clean, feature-driven architecture using Next.js App Router and Prisma ORM.
+A focused, production-grade web application built for **Registry Administrators** to handle the core day-to-day administrative workflows of higher education: **Student Enrolment**, **Fees & Payments**, **Assessment Submissions**, and **Marksheets & Results**.
 
----
-
-## Technical Stack & Toolbox
-
-- **Frontend & Framework:** Next.js 14+ (App Router)
-- **Language:** TypeScript
-- **Database & ORM:** PostgreSQL, Prisma ORM
-- **State Management & Data Fetching:** TanStack Query (React Query)
-- **API Client:** Axios
-- **Styling & UI:** Tailwind CSS
-- **Authentication:** JWT Cookie-based session management
-- **File Handling:** Local storage integration for PDF & DOCX student submissions
+Built with a modular, **feature-driven architecture** using **Next.js 14+ (App Router)**, **PostgreSQL**, **Prisma ORM**, **Tailwind CSS**, and **JWT Authentication (Access & Refresh Tokens)**.
 
 ---
 
-## Overview & Core Workflows (Module-Wise Architecture)
+## Table of Contents
+- [Architecture & Core Modules](#architecture--core-modules)
+  - [Module 0: Authentication & Role Authorization](#module-0-authentication--role-authorization)
+  - [Module 1: Student Enrolment & Programmes](#module-1-student-enrolment--programmes)
+  - [Module 2: Fees & Payments Ledger](#module-2-fees--payments-ledger)
+  - [Module 3: Assessment Submission](#module-3-assessment-submission)
+  - [Module 4: Marksheet & Results](#module-4-marksheet--results)
+- [Database Schema](#database-schema)
+- [Edge Cases & Product Decisions](#edge-cases--product-decisions)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started (Local Development)](#getting-started-local-development)
+- [Environment Variables](#environment-variables)
+- [Seed Data & Demo Credentials](#seed-data--demo-credentials)
+- [AI Usage Reflection](#ai-usage-reflection)
 
-This application is structured into distinct feature modules, serving as the blueprint for both frontend feature boundaries and backend API route handlers:
+---
 
-1. **Authentication & Authorization Module:**
-   * **Scope:** Manages secure user login, credential verification, and session sessions (`Staff` vs. `Student` roles).
-   * **Work:** Handles protected route redirection, role-based dashboard views, and secure JWT cookie generation.
+## Architecture & Core Modules
 
-2. **Student Enrolment Module:**
-   * **Scope:** Manages core registry admission and student lifecycle records.
-   * **Work:** Create student profiles, auto-generate unique student IDs (`SMS-YYYY-XXXX`), update academic statuses (`Enrolled`, `Deferred`, `Withdrawn`, `Completed`), and provide real-time dynamic search and filtering.
+The project is structured into feature modules that follow a strict dependency sequence:
 
-3. **Fees & Payments Module:**
-   * **Scope:** Tracks financial obligations, tuition fees, and payment settlements.
-   * **Work:** Assign programme-based fees, record transaction details (amount, date, reference number), calculate real-time outstanding balances, and flag overdue student accounts on the staff dashboard.
+```mermaid
+flowchart LR
+    M0["Module 0: Auth & Roles\n(JWT Access/Refresh, httpOnly)"] --> M1["Module 1: Enrolment & Programmes\n(Programmes, Students, SMS-YYYY-XXXX)"]
+    M1 --> M2["Module 2: Fees & Payments\n(Programme Tuition, Ledger, Overdue)"]
+    M1 --> M3["Module 3: Assessment Submissions\n(Coursework, File Uploads, Late Flags)"]
+    M3 --> M4["Module 4: Marksheets & Results\n(Grades 0-100, Classifications, Publish Gating)"]
+```
 
-4. **Assessment Submission Module:**
-   * **Scope:** Handles coursework creation and digital submissions.
-   * **Work:** Staff publish assessments (title, module, deadline), while students upload PDF/DOCX files with resubmission support and automated `isLate` timestamp tagging for late entries.
+---
 
-5. **Marksheet & Results Module:**
-   * **Scope:** Manages evaluation, automated grading classification, and secure result publishing.
-   * **Work:** Staff input numeric grades (`0–100`), system auto-calculates classifications (`Pass >= 40`, `Merit >= 60`, `Distinction >= 70`), and registry controls allow secure publishing or withholding of individual student marksheets.
+### Module 0: Authentication & Role Authorization
+
+* **Dependency:** Prerequisite for all features — establishes user identity and role separation (`STAFF` vs. `STUDENT`).
+* **Strategy:** Dual-token JWT (15-min Access Token + 7-day Refresh Token with database-backed rotation) delivered via `httpOnly` cookies. Protected by Next.js edge middleware.
+* **API Endpoints:**
+  * `POST /api/auth/login` — Authenticates credentials, issues access & refresh tokens.
+  * `POST /api/auth/refresh` — Validates refresh token against database, rotates token pair.
+  * `POST /api/auth/logout` — Revokes refresh token in database, clears auth cookies.
+  * `GET /api/auth/me` — Returns active user session, assigned role, and linked profile.
+
+---
+
+### Module 1: Student Enrolment & Programmes
+
+* **Dependency:** Prerequisite for Fees, Submissions, and Grades — students and programmes are root domain entities.
+* **Features:**
+  * Auto-generates unique Student IDs in `SMS-YYYY-XXXX` format (e.g., `SMS-2025-0001`).
+  * Captures full name, email, date of birth, programme, academic year, and enrolment status.
+  * Enrolment statuses: `Enrolled`, `Deferred`, `Withdrawn`, `Completed`.
+  * Real-time search and multi-filtering (Name, Student ID, Programme, Status).
+* **API Endpoints:**
+  * `GET /api/programmes` — Lists programmes and baseline tuition fees.
+  * `POST /api/students` — Enrols a student, auto-generates ID, and creates linked account.
+  * `GET /api/students` — Queries student directory with search, filter, and pagination.
+  * `PATCH /api/students/[id]/status` — Updates student enrolment lifecycle status.
+
+---
+
+### Module 2: Fees & Payments Ledger
+
+* **Dependency:** Depends on Module 1 — tuition fees are bound to the student's enrolled programme.
+* **Features:**
+  * Automatically assigns programme tuition fee to each enrolled student.
+  * Records payment transactions: amount, date, and external reference number.
+  * Computes real-time outstanding balance: $\text{Balance} = \text{Fee} - \sum(\text{Payments})$.
+  * Visually flags students with overdue outstanding balances on the Registry dashboard.
+* **API Endpoints:**
+  * `GET /api/students/[id]/fees` — Returns programme fee, payment ledger, and current balance.
+  * `POST /api/payments` — Records payment transaction with reference verification.
+  * `GET /api/fees/overdue` — Returns students with unpaid overdue balances for Registry alerts.
+
+---
+
+### Module 3: Assessment Submission
+
+* **Dependency:** Depends on Module 1 — coursework is created per programme/module for enrolled students.
+* **Features:**
+  * Staff creates assessments: title, module, and submission deadline.
+  * Students submit coursework deliverables (`.pdf`, `.docx`).
+  * One submission per student per assessment, with resubmission allowed prior to deadline.
+  * Late submissions accepted past deadline but permanently tagged with `isLate = true`.
+* **API Endpoints:**
+  * `GET /api/assessments` — Lists assessments filtered by module/programme.
+  * `POST /api/assessments` — Staff creates an assessment with deadline.
+  * `POST /api/assessments/[id]/submit` — Student submits coursework file (with resubmission & late detection).
+  * `GET /api/assessments/[id]/submissions` — Staff reviews submissions with timestamps and late tags.
+
+---
+
+### Module 4: Marksheet & Results
+
+* **Dependency:** Depends on Module 3 — grades are awarded against submitted student coursework.
+* **Features:**
+  * Staff enters numeric grades ($0–100$) per student per assessment.
+  * Automatic UK university classification:
+    * **Distinction:** $\ge 70$
+    * **Merit:** $60 - 69$
+    * **Pass:** $40 - 59$
+    * **Fail:** $< 40$
+  * Granular publish/withhold control per student.
+  * Student marksheet strictly gated: unpublished grades remain hidden until published.
+* **API Endpoints:**
+  * `POST /api/grades` — Staff records/updates numeric grade (computes classification).
+  * `PATCH /api/grades/[id]/publish` — Staff toggles publication status (`isPublished: true | false`).
+  * `GET /api/students/[id]/marksheet` — Student marksheet (returns only published results).
+  * `GET /api/assessments/[id]/grades` — Staff grade overview for the assessment.
 
 ---
 
@@ -47,86 +121,142 @@ This application is structured into distinct feature modules, serving as the blu
 
 ```mermaid
 classDiagram
+    direction TB
+
     class User {
-        +String id
-        +String email
+        +String id PK
+        +String email UK, INDEX
         +String passwordHash
         +Role role
         +DateTime createdAt
     }
 
+    class RefreshToken {
+        +String id PK
+        +String tokenHash UK, INDEX
+        +String userId FK, INDEX
+        +DateTime expiresAt INDEX
+        +Boolean isRevoked
+    }
+
     class Staff {
-        +String id
-        +String staffId
+        +String id PK
+        +String staffId UK, INDEX
         +String fullName
         +String department
-        +String userId
-        +createAssessment()
-        +recordPayment()
-        +enterGrade()
-        +publishResult()
+        +String userId FK, INDEX
+    }
+
+    class Programme {
+        +String id PK
+        +String code UK, INDEX
+        +String name
+        +Float tuitionFee
+        +String createdById FK, INDEX
     }
 
     class Student {
-        +String id
-        +String studentId
-        +String fullName
-        +String userId
-        +String programme
+        +String id PK
+        +String studentId UK, INDEX
+        +String fullName INDEX
+        +String email UK, INDEX
+        +DateTime dateOfBirth
         +String academicYear
-        +String status
-        +submitAssessment()
-    }
-
-    class Assessment {
-        +String id
-        +String title
-        +String module
-        +DateTime deadline
-    }
-
-    class Submission {
-        +String id
-        +String assessmentId
-        +String studentId
-        +String fileUrl
-        +DateTime submittedAt
-        +Boolean isLate
+        +EnrolmentStatus status INDEX
+        +String programmeId FK, INDEX
+        +String userId FK, INDEX
     }
 
     class Payment {
-        +String id
-        +String studentId
-        +String staffId
+        +String id PK
+        +String studentId FK, INDEX
+        +String recordedById FK, INDEX
         +Float amount
-        +DateTime date
-        +String referenceNo
+        +DateTime paymentDate INDEX
+        +String referenceNo UK, INDEX
+    }
+
+    class Assessment {
+        +String id PK
+        +String title
+        +String module
+        +DateTime deadline INDEX
+        +String programmeId FK, INDEX
+        +String createdById FK, INDEX
+    }
+
+    class Submission {
+        +String id PK
+        +String assessmentId FK, INDEX
+        +String studentId FK, INDEX
+        +String fileUrl
+        +String fileName
+        +DateTime submittedAt
+        +Boolean isLate INDEX
     }
 
     class Grade {
-        +String id
-        +String assessmentId
-        +String studentId
-        +String staffId
+        +String id PK
+        +String assessmentId FK, INDEX
+        +String studentId FK, INDEX
+        +String submissionId FK, INDEX
+        +String gradedById FK, INDEX
         +Float numericGrade
         +String classification
-        +Boolean isPublished
+        +Boolean isPublished INDEX
+        +DateTime publishedAt
     }
 
-    User "1" --> "0..1" Student : has
-    User "1" --> "0..1" Staff : has
-    Staff "1" --> "*" Assessment : creates
-    Staff "1" --> "*" Payment : records
-    Staff "1" --> "*" Grade : evaluates/publishes
-    Student "1" --> "*" Payment : pays
-    Student "1" --> "*" Submission : submits
-    Assessment "1" --> "*" Submission : receives
-    Student "1" --> "*" Grade : receives
-    Assessment "1" --> "*" Grade : has
+    %% Authentication & Identity
+    User "1" --> "*" RefreshToken : maintains session
+    User "1" --> "0..1" Staff : staff profile
+    User "1" --> "0..1" Student : student profile
 
+    %% Staff Governance & Registry Actions
+    Staff "1" --> "*" Programme : creates & configures
+    Staff "1" --> "*" Payment : records transaction
+    Staff "1" --> "*" Assessment : creates coursework
+    Staff "1" --> "*" Grade : grades & publishes
+
+    %% Student Academic & Financial Lifecycle
+    Programme "1" --> "*" Student : defines curriculum & fee
+    Programme "1" --> "*" Assessment : offers module
+    Student "1" --> "*" Payment : makes payment
+    Student "1" --> "*" Submission : submits work
+    Assessment "1" --> "*" Submission : collects
+    Submission "0..1" --> "1" Grade : evaluated as
+    Student "1" --> "*" Grade : receives result
+    Assessment "1" --> "*" Grade : evaluated under
 ```
 
-## Folder Structure
+---
+
+## Edge Cases & Product Decisions
+
+| Workflow | Edge Case / Scenario | Architectural Decision |
+| :--- | :--- | :--- |
+| **Auth** | Refresh token reuse / stolen token | Token rotation with DB invalidation; reusing an old token revokes all user sessions. |
+| **Enrolment** | Concurrent ID generation collision | Atomic, zero-padded sequence generation per academic year (`SMS-YYYY-XXXX`). |
+| **Enrolment** | Student withdrawal (`Withdrawn`) | Preserves payment ledger and submission history without cascading deletes. |
+| **Fees** | Overdue debt detection | Flags any student with an outstanding balance $> 0$ past the payment schedule. |
+| **Assessments** | Resubmission before deadline | Overwrites previous upload, updates timestamp, and maintains single submission constraint. |
+| **Assessments** | Submissions past deadline | Accepted but tagged with `isLate = true` and highlighted in staff dashboard. |
+| **Results** | Withheld marksheet | Database query for student marksheet filters `isPublished: true`, hiding draft marks. |
+
+---
+
+## Tech Stack
+
+* **Framework:** Next.js 14+ (App Router, Route Handlers, Server Actions)
+* **Language:** TypeScript
+* **Database & ORM:** PostgreSQL + Prisma ORM
+* **Authentication:** JWT with Access + Refresh Token rotation (stored in `httpOnly` cookies)
+* **Styling:** Tailwind CSS
+* **Validation:** Zod schemas
+
+---
+
+## Project Structure
 
 ```text
 README.md                       # Quick Start, Getting Started, Architecture Overview, and AI Usage
@@ -165,3 +295,92 @@ docs/                           # TECHNICAL DOCUMENTATION HUB (For developers & 
         ├── api.md              # API endpoints, request/response contracts for this feature
         └── components.md       # Key UI components and state management specific to this feature
 ```
+
+---
+
+## Getting Started (Local Development)
+
+### Prerequisites
+* **Node.js**: v18.17.0+
+* **PostgreSQL**: Local instance or hosted service (e.g., Supabase / Neon / Docker)
+
+### Installation & Run Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/M45um19/student_management_system.git
+   cd student_management_system
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Set up Environment Variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   *(Update `DATABASE_URL` with your PostgreSQL connection string).*
+
+4. **Run Database Migrations:**
+   ```bash
+   npx prisma migrate dev --name init
+   # OR for quick schema sync:
+   npx prisma db push
+   ```
+
+5. **Seed Demo Data:**
+   ```bash
+   npx prisma db seed
+   ```
+
+6. **Start Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Visit [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Environment Variables
+
+| Variable | Description | Example Value |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/sms_db?schema=public` |
+| `JWT_ACCESS_SECRET` | Secret key for 15-min Access Tokens | `your-secure-access-token-secret-32-chars-min` |
+| `JWT_REFRESH_SECRET` | Secret key for 7-day Refresh Tokens | `your-secure-refresh-token-secret-32-chars-min` |
+| `NEXT_PUBLIC_APP_URL` | Base application URL | `http://localhost:3000` |
+| `UPLOAD_DIR` | Local directory for coursework file uploads | `./uploads` |
+
+---
+
+## Seed Data & Demo Credentials
+
+The seed script (`prisma/seed.ts`) populates the system with 2 programmes, 5 students, fees, assessments, and grades:
+
+| Role | Email | Password | Context |
+| :--- | :--- | :--- | :--- |
+| **Registry Staff** | `admin@sms.ac.uk` | `Staff@12345` | Registry Administrator |
+| **Student** | `alice@sms.ac.uk` | `Student@12345` | `SMS-2025-0001` (BSc CS, Fees paid in full) |
+| **Student** | `brian@sms.ac.uk` | `Student@12345` | `SMS-2025-0002` (BA Bus, **Overdue fee balance**) |
+| **Student** | `clara@sms.ac.uk` | `Student@12345` | `SMS-2025-0003` (BSc CS, **Deferred** status) |
+| **Student** | `david@sms.ac.uk` | `Student@12345` | `SMS-2025-0004` (BSc CS, Coursework submitted **Late**) |
+| **Student** | `emma@sms.ac.uk` | `Student@12345` | `SMS-2025-0005` (BA Bus, Results **Published**) |
+
+---
+
+## AI Usage Reflection
+
+This project used AI pair programming tools as an accelerator while maintaining strict human ownership over core architecture, data integrity, and business logic:
+
+1. **Where AI Accelerated Development:**
+   * **Schema & Model Scaffolding:** AI drafted initial Prisma schemas, including relation definitions and the `RefreshToken` rotation model.
+   * **Realistic Seed Datasets:** Generated diverse sample records with realistic dates, edge cases (overdue fees, late submissions, withheld grades), and boundary classifications.
+   * **Edge-Case Brainstorming:** Used AI to review potential race conditions in sequential student ID generation and test classification boundaries against UK university standards.
+
+2. **Where Human Engineering & Ownership Took Precedence:**
+   * **Enterprise Auth Architecture:** Opted for a secure dual-token JWT model with database-backed refresh rotation and `httpOnly` cookies rather than naive client-side storage.
+   * **Data Normalization:** Designed `Programme` as an independent entity with its own fee schedule rather than an arbitrary text field, ensuring financial consistency.
+   * **Privacy & Security Boundaries:** Manually enforced that student marksheet endpoints filter unpublished results at the database query level.
+   * **Code Quality & Validation:** All routes and models are strictly typed with TypeScript and validated with Zod schemas.
