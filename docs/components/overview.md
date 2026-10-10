@@ -43,12 +43,13 @@ Role-specific overview landing pages providing high-level operational summaries 
 * **`index.ts`**: Barrel export.
 
 ### 2.2. `src/components/layout/`
-Responsive navigation shells configured for desktop and mobile form factors:
+Responsive navigation shells configured for desktop and mobile form factors, both featuring the official university logo (`/logo.png`) and sleek dark zinc aesthetic:
 * **`StaffSidebar.tsx`**:
-  * **Desktop**: Fixed left navigation rail (`w-64`) featuring branded badge, active route indicators, user profile summary, and sign-out action with spinner.
+  * **Branding**: Styled with the official institutional Royal Blue accent (`#0269ae` / `--brand-blue`).
+  * **Desktop**: Fixed left navigation rail (`w-64`) featuring university logo header, active route indicators, user profile summary, and sign-out action with spinner.
   * **Mobile**: Sticky top header with hamburger toggle button (`Menu` / `X`) opening an off-canvas drawer with backdrop blur overlay and body scroll locking.
 * **`StudentSidebar.tsx`**:
-  * Styled with an emerald/teal theme matching the student portal aesthetic.
+  * **Branding**: Styled with the official institutional Green accent (`#0a9748` / `--brand-green`).
   * Links to Student Hub, Fees & Ledger, Coursework Submissions, and Marksheet.
 * **`index.ts`**: Barrel export.
 
@@ -56,7 +57,8 @@ Responsive navigation shells configured for desktop and mobile form factors:
 Reusable design primitives used across pages and future feature modules:
 * **`StatCard.tsx`**: Metric display card supporting icons, badges, titles, numeric values, and descriptive subtitles.
 * **`Badge.tsx`**: Flexible status pill supporting multiple color variants (`default`, `primary`, `success`, `warning`, `danger`, `outline`) and sizes.
-* **`PageHeader.tsx`**: Reusable hero banner supporting custom gradients (`indigo`, `emerald`, `zinc`), subtitle descriptions, and status badges.
+* **`PageHeader.tsx`**: Reusable hero banner supporting brand themes (Staff Royal Blue, Student Green, and Zinc), subtitle descriptions, and status badges.
+* **`Modal.tsx`**: Accessible, responsive dialog overlay with backdrop blur, keyboard `Escape` dismiss, scroll-locking, and customizable `maxWidth` sizing (`sm` to `2xl`).
 * **`index.ts`**: Barrel export.
 
 ### 2.4. `src/components/providers/`

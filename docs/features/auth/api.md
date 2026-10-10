@@ -23,7 +23,7 @@ Authenticates credentials, generates dual tokens, persists the refresh token has
   {
     "success": true,
     "message": "Login successful",
-    "user": {
+    "data": {
       "id": "01a1253d-ad1d-76d3-b6ab-fc8190f88a2f",
       "email": "admin@sms.ac.uk",
       "role": "STAFF",
@@ -41,7 +41,8 @@ Authenticates credentials, generates dual tokens, persists the refresh token has
   ```json
   {
     "success": false,
-    "message": "Invalid email or password"
+    "message": "Invalid email or password",
+    "data": null
   }
   ```
 
@@ -61,7 +62,7 @@ Requires cookie `sms_refresh_token`.
   {
     "success": true,
     "message": "Token refreshed successfully",
-    "user": {
+    "data": {
       "id": "01a1253d-ad1d-76d3-b6ab-fc8190f88a2f",
       "email": "admin@sms.ac.uk",
       "role": "STAFF",
@@ -75,7 +76,8 @@ Requires cookie `sms_refresh_token`.
   ```json
   {
     "success": false,
-    "message": "Refresh token is no longer valid"
+    "message": "Refresh token is no longer valid",
+    "data": null
   }
   ```
 
@@ -90,7 +92,8 @@ Revokes the refresh token record in the database and explicitly clears both `sms
   ```json
   {
     "success": true,
-    "message": "Logged out successfully"
+    "message": "Logged out successfully",
+    "data": null
   }
   ```
 
@@ -104,20 +107,29 @@ Returns the active session state and user identity from the verified access toke
 * **`200 OK` (Authenticated)**
   ```json
   {
-    "authenticated": true,
-    "user": {
+    "success": true,
+    "message": "Active session retrieved successfully",
+    "data": {
       "id": "01a1253d-ad1d-76d3-b6ab-fc8190f88a2f",
       "email": "admin@sms.ac.uk",
       "role": "STAFF",
       "name": "Registry Administrator",
-      "staffId": "STF-2025-001"
+      "staffId": "STF-2025-001",
+      "department": "Academic Registry & Admissions"
+    },
+    "meta": {
+      "authenticated": true
     }
   }
   ```
 * **`401 Unauthorized` (Unauthenticated)**
   ```json
   {
-    "authenticated": false,
-    "user": null
+    "success": false,
+    "message": "No active session found",
+    "data": null,
+    "meta": {
+      "authenticated": false
+    }
   }
   ```

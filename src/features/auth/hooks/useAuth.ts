@@ -28,14 +28,17 @@ export function useAuth() {
   const loginMutation = useMutation<AuthResponse, Error, LoginCredentials>({
     mutationFn: (credentials) => authService.login(credentials),
     onSuccess: (data) => {
+      const user = data.data ?? null;
       // Optimistically update session cache
       queryClient.setQueryData<SessionResponse>(AUTH_KEYS.session, {
-        authenticated: true,
-        user: data.user || null,
+        success: true,
+        message: 'Active session',
+        data: user,
+        meta: { authenticated: true },
       });
 
       // Role-based routing
-      if (data.user?.role === 'STAFF') {
+      if (user?.role === 'STAFF') {
         router.push('/staff/dashboard');
       } else {
         router.push('/student/dashboard');
@@ -49,8 +52,10 @@ export function useAuth() {
     mutationFn: () => authService.logout(),
     onSuccess: () => {
       queryClient.setQueryData<SessionResponse>(AUTH_KEYS.session, {
-        authenticated: false,
-        user: null,
+        success: false,
+        message: 'Logged out',
+        data: null,
+        meta: { authenticated: false },
       });
       queryClient.clear(); // Clear all cached queries
       router.push('/login');
@@ -59,8 +64,8 @@ export function useAuth() {
   });
 
   return {
-    user: sessionQuery.data?.user ?? null,
-    isAuthenticated: !!sessionQuery.data?.authenticated,
+    user: sessionQuery.data?.data ?? null,
+    isAuthenticated: Boolean(sessionQuery.data?.meta?.authenticated),
     isLoadingSession: sessionQuery.isLoading,
     login: loginMutation.mutateAsync,
     isLoggingIn: loginMutation.isPending,
