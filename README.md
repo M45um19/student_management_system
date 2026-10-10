@@ -54,14 +54,18 @@ flowchart LR
 
 * **Dependency:** Prerequisite for Fees, Submissions, and Grades — students and programmes are root domain entities.
 * **Features:**
-  * Auto-generates unique Student IDs in `SMS-YYYY-XXXX` format (e.g., `SMS-2025-0001`).
-  * Captures full name, email, date of birth, programme, academic year, and enrolment status.
+  * Auto-generates unique Student IDs in `SMS-YYYY-XXXX` format (e.g., `SMS-2025-0001`) dynamically resolved from any free-form Academic Intake Year string (e.g. `2024/2025` or `2025`).
+  * Captures full name, email, date of birth, programme, academic intake year string, and enrolment status.
   * Enrolment statuses: `Enrolled`, `Deferred`, `Withdrawn`, `Completed`.
-  * Real-time search and multi-filtering (Name, Student ID, Programme, Status).
+  * Real-time search and multi-filtering (Name, Student ID, Email, Degree Programme, Enrolment Status).
+  * High-performance $O(1)$ UUIDv7 cursor-based pagination with bidirectional forward/backward history navigation.
 * **API Endpoints:**
-  * `GET /api/programmes` — Lists programmes and baseline tuition fees.
+  * `GET /api/programmes` — Lists programmes, baseline tuition fees, and enrolment counts.
+  * `POST /api/programmes` — Configures a new degree programme and tuition fee (Staff only).
+  * `GET /api/programmes/[id]` — Retrieves single programme details by UUID.
   * `POST /api/students` — Enrols a student, auto-generates ID, and creates linked account.
-  * `GET /api/students` — Queries student directory with search, filter, and pagination.
+  * `GET /api/students` — Queries student directory with search, filter, and UUIDv7 cursor pagination.
+  * `GET /api/students/[id]` — Retrieves full student profile, curriculum, and financial ledger.
   * `PATCH /api/students/[id]/status` — Updates student enrolment lifecycle status.
 
 ---
@@ -236,8 +240,11 @@ classDiagram
 | Workflow | Edge Case / Scenario | Architectural Decision |
 | :--- | :--- | :--- |
 | **Auth** | Refresh token reuse / stolen token | Token rotation with DB invalidation; reusing an old token revokes all user sessions. |
-| **Enrolment** | Concurrent ID generation collision | Atomic, zero-padded sequence generation per academic year (`SMS-YYYY-XXXX`). |
+| **Auth** | Server route handler protection | `auth-guard.ts` extracts session users from HTTP-only cookies, checking access token first and refresh token fallback with DB verification. |
+| **Enrolment** | Flexible intake year formats | Academic Intake Year is an open string; `resolveTargetYear()` parses 4-digit years for ID prefixing. |
+| **Enrolment** | Concurrent ID generation collision | Atomic, zero-padded sequence generation per academic year (`SMS-YYYY-XXXX`) inside Prisma transactions. |
 | **Enrolment** | Student withdrawal (`Withdrawn`) | Preserves payment ledger and submission history without cascading deletes. |
+| **Enrolment** | Large cohort query latency | UUIDv7 time-ordered primary keys enable $O(1)$ B-Tree index seeking (`WHERE id < cursor`) instead of degrading $O(N)$ table offsets. |
 | **Fees** | Overdue debt detection | Flags any student with an outstanding balance $> 0$ past the payment schedule. |
 | **Assessments** | Resubmission before deadline | Overwrites previous upload, updates timestamp, and maintains single submission constraint. |
 | **Assessments** | Submissions past deadline | Accepted but tagged with `isLate = true` and highlighted in staff dashboard. |
@@ -290,7 +297,12 @@ src/
 │       └── index.ts            # Public barrel export for clean inter-feature imports
 │
 ├── lib/                        # SHARED INFRASTRUCTURE (Global singletons & utilities)
-│   └── [utility-name].ts       # Database client, auth helpers, HTTP interceptors, constants
+│   ├── api-response.ts         # Standardized API response contract { success, message, data, meta }
+│   ├── auth-guard.ts           # Server-side route handler session & role barrier guards
+│   ├── axios.ts                # Axios client with automated 401 token refresh interceptor
+│   ├── jwt.ts                  # Access/Refresh token signing, verification & SHA-256 hashing
+│   ├── prisma.ts               # Global Prisma Client singleton instance
+│   └── constants.ts            # Cookie names, token expiration lifetimes & routes
 │
 └── proxy.ts                    # Edge route guard proxy / middleware (authentication & RBAC)
 

@@ -50,7 +50,7 @@ To keep the codebase maintainable and strictly organized:
 | Feature Module | Status | Technical Documentation |
 | :--- | :--- | :--- |
 | **Module 0: Authentication & Role Authorization** | 🟢 Complete | [Overview](./features/auth/overview.md) • [API](./features/auth/api.md) • [Components](./features/auth/components.md) |
-| **Module 1: Student Enrolment & Programmes** | ⚪ Planned | Overview • API • Components |
+| **Module 1: Student Enrolment & Programmes** | 🟢 Complete | [Overview](./features/enrolment/overview.md) • [API](./features/enrolment/api.md) • [Components](./features/enrolment/components.md) |
 | **Module 2: Fees & Payments Ledger** | ⚪ Planned | Overview • API • Components |
 | **Module 3: Assessment Submission** | ⚪ Planned | Overview • API • Components |
 | **Module 4: Marksheet & Results** | ⚪ Planned | Overview • API • Components |
@@ -63,3 +63,19 @@ To keep the codebase maintainable and strictly organized:
 * **Storage:** Stored in browser `httpOnly`, `SameSite=Lax` cookies to prevent client-side XSS exfiltration.
 * **Database Tracking:** Refresh tokens are hashed using SHA-256 and tracked in the `RefreshToken` database table to enable instant session revocation and detect token reuse attacks.
 * **Edge Route Guards:** Next.js `proxy.ts` intercepts `/staff/*` and `/student/*` requests to enforce role boundaries before route rendering.
+* **Server Session Guard (`auth-guard.ts`):** `getSessionUser`, `requireStaff`, and `requireStudent` extract session users directly from cookies, verify database linkages, and ensure strict RBAC access barriers on API route handlers.
+
+---
+
+## Standardized API Response Specification
+
+All API endpoints strictly conform to a 4-property standard response contract (`src/lib/api-response.ts`):
+```typescript
+interface StandardApiResponse<T = unknown, M = unknown> {
+  success: boolean;       // Operation success status (true | false)
+  message: string;        // Human-readable status or error description
+  data: T;                // Primary payload data (objects, arrays; null on failure)
+  meta?: M;               // Optional metadata (pagination, metrics, flags)
+}
+```
+Helper utilities `apiSuccess(data, message, meta, status)` and `apiError(message, status, data, meta)` guarantee uniformity across all backend routes and client consumers.

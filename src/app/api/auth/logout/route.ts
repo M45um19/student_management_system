@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully',
+      data: null,
     });
 
     // Clear authentication cookies
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: 'Logged out with local session cleared',
+      data: null,
     });
     response.cookies.delete(COOKIES.ACCESS_TOKEN);
     response.cookies.delete(COOKIES.REFRESH_TOKEN);

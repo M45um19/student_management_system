@@ -1,3 +1,4 @@
-export { Badge, type BadgeProps } from './Badge';
-export { StatCard, type StatCardProps } from './StatCard';
-export { PageHeader, type PageHeaderProps } from './PageHeader';
+export * from './Badge';
+export * from './StatCard';
+export * from './PageHeader';
+export * from './Modal';
