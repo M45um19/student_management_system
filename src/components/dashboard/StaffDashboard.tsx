@@ -14,14 +14,20 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useOverdueFees, formatGBP } from '@/features/fees';
+import { useAssessments } from '@/features/assessments';
 
 export const StaffDashboard: React.FC = () => {
   const { user } = useAuth();
   const { data: overdueData } = useOverdueFees();
+  const { data: assessmentsData } = useAssessments();
 
   const overdueStats = overdueData?.meta?.stats;
   const overdueCount = overdueStats?.totalOverdueStudents ?? 0;
   const overdueDebt = overdueStats?.totalOutstanding ?? 0;
+
+  const assessmentStats = assessmentsData?.meta?.stats;
+  const activeAssessments = assessmentStats?.activeDeadlines ?? 0;
+  const lateSubmissions = assessmentStats?.lateSubmissions ?? 0;
 
   const workflowCards = [
     {
@@ -44,7 +50,13 @@ export const StaffDashboard: React.FC = () => {
       desc: 'Publish module coursework, set submission deadlines, inspect student uploads, and review late submission flags.',
       href: '/staff/assessments',
       icon: BookOpen,
-      badge: 'Academics',
+      badge:
+        lateSubmissions > 0
+          ? `${lateSubmissions} Flagged Late`
+          : activeAssessments > 0
+          ? `${activeAssessments} Active Deadlines`
+          : 'Academics',
+      isAlert: lateSubmissions > 0,
     },
     {
       title: '4. Marksheet & Results',
