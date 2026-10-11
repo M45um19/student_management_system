@@ -2,23 +2,17 @@
 
 import React, { useState } from 'react';
 import { 
-  User, 
-  Mail, 
-  Calendar, 
   BookOpen, 
   CreditCard, 
-  GraduationCap, 
-  FileText, 
-  Clock, 
   CheckCircle2, 
   Loader2, 
-  ShieldCheck,
-  ChevronDown
+  ChevronDown 
 } from 'lucide-react';
 import { Modal } from '@/components/shared';
 import { StatusBadge } from './StatusBadge';
 import { useStudent, useUpdateStudentStatus } from '../hooks/useEnrolment';
 import { EnrolmentStatusType } from '../types';
+import { RecordPaymentModal } from '@/features/fees';
 
 interface StudentDetailModalProps {
   studentId: string | null;
@@ -34,6 +28,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
   const { data, isLoading } = useStudent(studentId || undefined);
   const { mutateAsync: updateStatus, isPending: isUpdating } = useUpdateStudentStatus();
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const student = data?.data ?? null;
 
@@ -211,6 +206,17 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       {student.financialSummary.balance === 0 ? 'Settled' : 'Payment Overdue'}
                     </span>
                   </div>
+
+                  {student.financialSummary.balance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0269ae] hover:bg-[#015289] text-white shadow-xs transition-all active:scale-95"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>Record Payment</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-zinc-500">No payment records located.</div>
@@ -258,6 +264,23 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
           </div>
         </div>
       )}
+
+      {/* Record Payment Sub-modal */}
+      <RecordPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        preselectedStudent={
+          student
+            ? {
+                id: student.id,
+                studentId: student.studentId,
+                fullName: student.fullName,
+                balance: student.financialSummary?.balance,
+                tuitionFee: student.financialSummary?.tuitionFee,
+              }
+            : null
+        }
+      />
     </Modal>
   );
 };

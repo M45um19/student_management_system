@@ -8,7 +8,7 @@ export async function proxy(req: NextRequest) {
   const accessToken = req.cookies.get(COOKIES.ACCESS_TOKEN)?.value;
   const refreshToken = req.cookies.get(COOKIES.REFRESH_TOKEN)?.value;
 
-  let user = accessToken ? await verifyAccessToken(accessToken) : null;
+  const user = accessToken ? await verifyAccessToken(accessToken) : null;
 
   // If access token is expired, but refresh token exists and is valid
   if (!user && refreshToken) {

@@ -40,6 +40,7 @@ flowchart LR
 
 ### Module 0: Authentication & Role Authorization
 
+* **Status:** `Complete`
 * **Dependency:** Prerequisite for all features — establishes user identity and role separation (`STAFF` vs. `STUDENT`).
 * **Strategy:** Dual-token JWT (15-min Access Token + 7-day Refresh Token with database-backed rotation) delivered via `httpOnly` cookies. Protected by Next.js edge middleware.
 * **API Endpoints:**
@@ -52,6 +53,7 @@ flowchart LR
 
 ### Module 1: Student Enrolment & Programmes
 
+* **Status:** `Complete`
 * **Dependency:** Prerequisite for Fees, Submissions, and Grades — students and programmes are root domain entities.
 * **Features:**
   * Auto-generates unique Student IDs in `SMS-YYYY-XXXX` format (e.g., `SMS-2025-0001`) dynamically resolved from any free-form Academic Intake Year string (e.g. `2024/2025` or `2025`).
@@ -72,21 +74,27 @@ flowchart LR
 
 ### Module 2: Fees & Payments Ledger
 
+* **Status:** `Complete`
 * **Dependency:** Depends on Module 1 — tuition fees are bound to the student's enrolled programme.
 * **Features:**
   * Automatically assigns programme tuition fee to each enrolled student.
-  * Records payment transactions: amount, date, and external reference number.
+  * Records payment transactions: amount, date, and external reference number with atomic uniqueness verification.
   * Computes real-time outstanding balance: $\text{Balance} = \text{Fee} - \sum(\text{Payments})$.
-  * Visually flags students with overdue outstanding balances on the Registry dashboard.
+  * High-performance $O(1)$ UUIDv7 cursor-based pagination with bidirectional forward/backward history navigation on transactions and overdue debt tracking.
+  * Institutional financial metrics computation: Total Invoiced Tuition, Total Collected, Outstanding Debt, and Collection Rate %.
+  * Urgency-tiered debt tracking (`Critical`, `Elevated`, `Moderate`) with quick "Record Payment" actions.
+  * Student Statement of Account lookup with printable official electronic payment receipts.
 * **API Endpoints:**
-  * `GET /api/students/[id]/fees` — Returns programme fee, payment ledger, and current balance.
-  * `POST /api/payments` — Records payment transaction with reference verification.
-  * `GET /api/fees/overdue` — Returns students with unpaid overdue balances for Registry alerts.
+  * `GET /api/payments` — Lists institutional payment transactions with search, student filtering, and UUIDv7 cursor pagination.
+  * `POST /api/payments` — Records payment transaction with atomic reference uniqueness verification.
+  * `GET /api/students/[id]/fees` — Returns programme fee, payment ledger, and current balance for a student.
+  * `GET /api/fees/overdue` — Returns students with unpaid overdue balances, institutional finance KPIs, and cursor pagination.
 
 ---
 
 ### Module 3: Assessment Submission
 
+* **Status:** `Planned`
 * **Dependency:** Depends on Module 1 — coursework is created per programme/module for enrolled students.
 * **Features:**
   * Staff creates assessments: title, module, and submission deadline.
@@ -102,6 +110,8 @@ flowchart LR
 ---
 
 ### Module 4: Marksheet & Results
+
+* **Status:** `Planned`
 
 * **Dependency:** Depends on Module 3 — grades are awarded against submitted student coursework.
 * **Features:**
@@ -245,7 +255,10 @@ classDiagram
 | **Enrolment** | Concurrent ID generation collision | Atomic, zero-padded sequence generation per academic year (`SMS-YYYY-XXXX`) inside Prisma transactions. |
 | **Enrolment** | Student withdrawal (`Withdrawn`) | Preserves payment ledger and submission history without cascading deletes. |
 | **Enrolment** | Large cohort query latency | UUIDv7 time-ordered primary keys enable $O(1)$ B-Tree index seeking (`WHERE id < cursor`) instead of degrading $O(N)$ table offsets. |
-| **Fees** | Overdue debt detection | Flags any student with an outstanding balance $> 0$ past the payment schedule. |
+| **Fees** | Overdue debt detection | Flags any student with an outstanding balance $> 0$ with tiered urgency classification (`Critical`, `Elevated`, `Moderate`). |
+| **Fees** | Duplicate payment reference numbers | Enforces `@unique` reference numbers at database level and returns `409 Conflict` if duplicate reference is submitted. |
+| **Fees** | High-volume transaction & overdue latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation. |
+| **Fees** | Institutional financial KPI integrity | Aggregates overall invoiced tuition, collected revenue, and outstanding debt across the entire cohort before slicing overdue paginated lists, preventing partial-page data skew. |
 | **Assessments** | Resubmission before deadline | Overwrites previous upload, updates timestamp, and maintains single submission constraint. |
 | **Assessments** | Submissions past deadline | Accepted but tagged with `isLate = true` and highlighted in staff dashboard. |
 | **Results** | Withheld marksheet | Database query for student marksheet filters `isPublished: true`, hiding draft marks. |
@@ -313,6 +326,7 @@ prisma/
 docs/                           # TECHNICAL DOCUMENTATION HUB
 ├── index.md                    # Architecture blueprint & master documentation index
 ├── components/                 # Application UI specifications & design guidelines
+├── lib/                        # Core library singletons, auth & utility specifications
 └── features/                   # Modular domain technical specifications
     └── [feature-name]/         # Universal 3-file specification per feature:
         ├── overview.md         # Domain business rules, permissions & sequence workflows

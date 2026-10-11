@@ -43,6 +43,11 @@ To keep the codebase maintainable and strictly organized:
    * **`providers/`**: Global React context wrappers and client state providers (`QueryProvider`).
    * Comprehensive guide: [UI & Component Architecture Guide](./components/overview.md).
 
+3. **`src/lib/` (Shared Infrastructure & Utilities)**:
+   * Foundational, non-domain singletons, security infrastructure, networking interceptors, and standardization contracts.
+   * Houses database pool management (`prisma.ts`), isomorphic JWT cryptography (`jwt.ts`), server RBAC route barriers (`auth-guard.ts`), automated 401 refresh interceptors (`axios.ts`), and standardized JSON response shells (`api-response.ts`).
+   * Comprehensive guide: [Shared Infrastructure & Utilities Guide](./lib/overview.md).
+
 ---
 
 ## Feature Documentation Index
@@ -51,7 +56,7 @@ To keep the codebase maintainable and strictly organized:
 | :--- | :--- | :--- |
 | **Module 0: Authentication & Role Authorization** | 🟢 Complete | [Overview](./features/auth/overview.md) • [API](./features/auth/api.md) • [Components](./features/auth/components.md) |
 | **Module 1: Student Enrolment & Programmes** | 🟢 Complete | [Overview](./features/enrolment/overview.md) • [API](./features/enrolment/api.md) • [Components](./features/enrolment/components.md) |
-| **Module 2: Fees & Payments Ledger** | ⚪ Planned | Overview • API • Components |
+| **Module 2: Fees & Payments Ledger** | 🟢 Complete | [Overview](./features/fees/overview.md) • [API](./features/fees/api.md) • [Components](./features/fees/components.md) |
 | **Module 3: Assessment Submission** | ⚪ Planned | Overview • API • Components |
 | **Module 4: Marksheet & Results** | ⚪ Planned | Overview • API • Components |
 

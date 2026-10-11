@@ -9,12 +9,19 @@ import {
   GraduationCap, 
   ArrowRight,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useOverdueFees, formatGBP } from '@/features/fees';
 
 export const StaffDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { data: overdueData } = useOverdueFees();
+
+  const overdueStats = overdueData?.meta?.stats;
+  const overdueCount = overdueStats?.totalOverdueStudents ?? 0;
+  const overdueDebt = overdueStats?.totalOutstanding ?? 0;
 
   const workflowCards = [
     {
@@ -29,7 +36,8 @@ export const StaffDashboard: React.FC = () => {
       desc: 'Track programme tuition fees, log payment transactions, compute real-time balances, and monitor overdue accounts.',
       href: '/staff/fees',
       icon: CreditCard,
-      badge: 'Finance & Ledger',
+      badge: overdueCount > 0 ? `${overdueCount} Overdue Accounts` : 'Ledger Settled',
+      isAlert: overdueCount > 0,
     },
     {
       title: '3. Assessments & Submissions',
@@ -68,6 +76,39 @@ export const StaffDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Registry Overdue Debt Alert Banner */}
+      {overdueCount > 0 && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-rose-50 dark:from-amber-950/40 dark:to-rose-950/40 border border-amber-200 dark:border-amber-800/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                  Registry Financial Action Required
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500 text-white">
+                  {overdueCount} Overdue
+                </span>
+              </div>
+              <p className="text-xs text-amber-800/90 dark:text-amber-400 mt-0.5">
+                {overdueCount} student {overdueCount === 1 ? 'account has' : 'accounts have'} outstanding tuition balances totalling{' '}
+                <span className="font-extrabold text-rose-600 dark:text-rose-400">{formatGBP(overdueDebt)}</span>.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/staff/fees"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#0269ae] hover:bg-[#015289] text-white shadow-xs transition-all active:scale-95 shrink-0 self-start sm:self-auto"
+          >
+            <span>Review Overdue Accounts</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* 4 Workflows Quick Jump Grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -92,7 +133,13 @@ export const StaffDashboard: React.FC = () => {
                     <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                    <span
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        card.isAlert
+                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 font-bold'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
+                      }`}
+                    >
                       {card.badge}
                     </span>
                   </div>
