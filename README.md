@@ -94,18 +94,26 @@ flowchart LR
 
 ### Module 3: Assessment Submission
 
-* **Status:** `Planned`
+* **Status:** `Complete`
 * **Dependency:** Depends on Module 1 — coursework is created per programme/module for enrolled students.
 * **Features:**
-  * Staff creates assessments: title, module, and submission deadline.
-  * Students submit coursework deliverables (`.pdf`, `.docx`).
-  * One submission per student per assessment, with resubmission allowed prior to deadline.
-  * Late submissions accepted past deadline but permanently tagged with `isLate = true`.
+  * Staff creates and configures coursework assessments: title, module code/title, degree programme, and submission deadline.
+  * Enrolled students submit coursework deliverables (`.pdf`, `.docx`, `.doc`) via drag-and-drop file upload.
+  * Enforces single submission constraint per student per assessment (`@@unique([assessmentId, studentId])`).
+  * Resubmissions allowed prior to deadline, safely overwriting existing deliverable without duplicate database records.
+  * Late submissions accepted past deadline but permanently tagged with `isLate = true` and flagged on Staff review rosters.
+  * Staff inspection dashboard with cohort completion rates, real-time submission progress bars, and direct deliverable download links.
+  * High-performance $O(1)$ UUIDv7 cursor-based pagination on assessment and submission fetches with bidirectional forward/backward history navigation, per-page selector, and server-side status/search filtering.
+  * Soft delete / Archive mechanism (`isActive: false`): replacing hard delete to preserve academic submissions and audit integrity while completely hiding archived assessments from normal rosters and the student portal.
+  * Dedicated `[Archived]` filter tab beside `[Past Deadline]` in Staff Dashboard with single-click restoration (`isActive: true`).
 * **API Endpoints:**
-  * `GET /api/assessments` — Lists assessments filtered by module/programme.
-  * `POST /api/assessments` — Staff creates an assessment with deadline.
-  * `POST /api/assessments/[id]/submit` — Student submits coursework file (with resubmission & late detection).
-  * `GET /api/assessments/[id]/submissions` — Staff reviews submissions with timestamps and late tags.
+  * `GET /api/assessments` — Lists assessments filtered by module/programme with role-scoped submission context, status filters (`all`, `active`, `passed`, `archived`), and UUIDv7 cursor pagination.
+  * `POST /api/assessments` — Staff creates a coursework assessment with deadline.
+  * `GET /api/assessments/[id]` — Retrieves assessment specifications, deadline countdown, and cohort metrics (404 for students if archived).
+  * `DELETE /api/assessments/[id]` — Staff archives an assessment (soft delete setting `isActive: false`, guarded against finalized grades).
+  * `PATCH /api/assessments/[id]` — Staff toggles active / archived state (`isActive: true | false`).
+  * `POST /api/assessments/[id]/submit` — Student submits coursework file (with multipart upload, resubmission & late detection).
+  * `GET /api/assessments/[id]/submissions` — Staff reviews cohort submissions roster with UUIDv7 cursor pagination, timestamps, and late tags.
 
 ---
 
@@ -197,6 +205,7 @@ classDiagram
         +DateTime deadline INDEX
         +String programmeId FK, INDEX
         +String createdById FK, INDEX
+        +Boolean isActive INDEX
     }
 
     class Submission {
@@ -261,6 +270,10 @@ classDiagram
 | **Fees** | Institutional financial KPI integrity | Aggregates overall invoiced tuition, collected revenue, and outstanding debt across the entire cohort before slicing overdue paginated lists, preventing partial-page data skew. |
 | **Assessments** | Resubmission before deadline | Overwrites previous upload, updates timestamp, and maintains single submission constraint. |
 | **Assessments** | Submissions past deadline | Accepted but tagged with `isLate = true` and highlighted in staff dashboard. |
+| **Assessments** | Large coursework catalogue query latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation on assessment fetch. |
+| **Assessments** | Large cohort submission query latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation on submissions roster. |
+| **Assessments** | Cohort submission KPI integrity | Aggregates overall enrolled students, submitted deliverables, on-time, late, and missing counts across the entire cohort before slicing paginated lists, preventing partial-page data skew. |
+| **Assessments** | Coursework archival & soft deletion | Deletions toggle `isActive = false`, preserving historical student uploads and grading audits while hiding archived items from students and active rosters, with single-click restoration. |
 | **Results** | Withheld marksheet | Database query for student marksheet filters `isPublished: true`, hiding draft marks. |
 
 ---
@@ -310,12 +323,6 @@ src/
 │       └── index.ts            # Public barrel export for clean inter-feature imports
 │
 ├── lib/                        # SHARED INFRASTRUCTURE (Global singletons & utilities)
-│   ├── api-response.ts         # Standardized API response contract { success, message, data, meta }
-│   ├── auth-guard.ts           # Server-side route handler session & role barrier guards
-│   ├── axios.ts                # Axios client with automated 401 token refresh interceptor
-│   ├── jwt.ts                  # Access/Refresh token signing, verification & SHA-256 hashing
-│   ├── prisma.ts               # Global Prisma Client singleton instance
-│   └── constants.ts            # Cookie names, token expiration lifetimes & routes
 │
 └── proxy.ts                    # Edge route guard proxy / middleware (authentication & RBAC)
 
