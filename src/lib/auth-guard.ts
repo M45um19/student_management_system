@@ -97,3 +97,15 @@ export async function requireStaff(req: NextRequest): Promise<AuthenticatedUser 
   }
   return user;
 }
+
+/**
+ * Guard that requires an authenticated user with STUDENT role.
+ * Returns the AuthenticatedUser or null if unauthorized.
+ */
+export async function requireStudent(req: NextRequest): Promise<AuthenticatedUser | null> {
+  const user = await getSessionUser(req);
+  if (!user || user.role !== 'STUDENT') {
+    return null;
+  }
+  return user;
+}
