@@ -57,7 +57,7 @@ To keep the codebase maintainable and strictly organized:
 | **Module 0: Authentication & Role Authorization** | 🟢 Complete | [Overview](./features/auth/overview.md) • [API](./features/auth/api.md) • [Components](./features/auth/components.md) |
 | **Module 1: Student Enrolment & Programmes** | 🟢 Complete | [Overview](./features/enrolment/overview.md) • [API](./features/enrolment/api.md) • [Components](./features/enrolment/components.md) |
 | **Module 2: Fees & Payments Ledger** | 🟢 Complete | [Overview](./features/fees/overview.md) • [API](./features/fees/api.md) • [Components](./features/fees/components.md) |
-| **Module 3: Assessment Submission** | ⚪ Planned | Overview • API • Components |
+| **Module 3: Assessment Submission** | 🟢 Complete | [Overview](./features/assessments/overview.md) • [API](./features/assessments/api.md) • [Components](./features/assessments/components.md) |
 | **Module 4: Marksheet & Results** | ⚪ Planned | Overview • API • Components |
 
 ---

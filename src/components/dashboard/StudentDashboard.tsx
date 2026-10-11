@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { CreditCard, BookOpen, GraduationCap, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useStudentFees, formatGBP } from '@/features/fees';
+import { useAssessments } from '@/features/assessments';
 
 export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const { data: feeData } = useStudentFees(user ? 'me' : undefined);
+  const { data: assessmentsData } = useAssessments();
 
   const ledger = feeData?.data;
   const isSettled = ledger ? ledger.balance === 0 : false;
@@ -17,6 +19,15 @@ export const StudentDashboard: React.FC = () => {
       ? 'Paid in Full'
       : `${formatGBP(ledger.balance)} Due`
     : 'Finance';
+
+  const assessments = assessmentsData?.data || [];
+  const pendingCount = assessments.filter((a) => !a.mySubmission).length;
+  const assessmentBadge =
+    assessments.length > 0
+      ? pendingCount > 0
+        ? `${pendingCount} Required`
+        : 'All Submitted'
+      : 'Coursework';
 
   const studentCards = [
     {
@@ -31,10 +42,14 @@ export const StudentDashboard: React.FC = () => {
     },
     {
       title: 'Coursework Submissions',
-      desc: 'View active module coursework, upload deliverables (.pdf / .docx), and check submission timestamps.',
+      desc:
+        assessments.length > 0
+          ? `${assessments.length} total deliverables assigned. ${pendingCount} pending submission.`
+          : 'View active module coursework, upload deliverables (.pdf / .docx), and check submission timestamps.',
       href: '/student/assessments',
       icon: BookOpen,
-      badge: 'Uploads',
+      badge: assessmentBadge,
+      isSettled: assessments.length > 0 && pendingCount === 0,
     },
     {
       title: 'Official Marksheet & Results',
