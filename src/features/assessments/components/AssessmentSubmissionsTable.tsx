@@ -138,7 +138,7 @@ export const AssessmentSubmissionsTable: React.FC<AssessmentSubmissionsTableProp
               <tr>
                 <td colSpan={5} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
                   <div className="inline-block animate-spin w-5 h-5 border-2 border-[#0269ae] border-t-transparent rounded-full mb-2" />
-                  <p>Loading cohort submissions roster...</p>
+                  <p>Loading class submissions roster...</p>
                 </td>
               </tr>
             ) : displayRoster.length === 0 ? (

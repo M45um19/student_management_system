@@ -10,7 +10,7 @@ Assessments are configured per degree programme and module by Registry Staff (`R
 2. **Student Self-Service Submission Portal:** Enrolled students view coursework requirements for their active modules, inspect live deadline countdowns, and upload deliverables.
 3. **Resubmission Prior to Deadline:** Students can overwrite previous uploads before the deadline without penalties or duplicate database rows.
 4. **Automated Late Submission Detection:** Submissions uploaded past the deadline are accepted to preserve academic progress, but are permanently tagged with `isLate = true` and flagged across Registry review rosters.
-5. **Cohort Submissions Roster & Auditing:** Registry Administrators inspect real-time cohort completion statistics (On-Time, Late, Missing) and download deliverables directly.
+5. **Class Submissions Roster & Auditing:** Registry Administrators inspect real-time class completion statistics (On-Time, Late, Missing) and download deliverables directly.
 
 ---
 
@@ -76,8 +76,8 @@ sequenceDiagram
 * Uploaded files are stored with unique, collision-resistant filenames (`${Date.now()}-${uuid}-${sanitizedName}`).
 
 ### 3.6. UUIDv7 Cursor-Based Pagination on Submissions
-* Cohort submissions roster queries leverage time-ordered UUIDv7 primary keys on `Student` records (`WHERE id < cursor`) to provide constant-time $O(1)$ seek latency instead of degrading $O(N)$ SQL table scans.
-* Full cohort submission KPIs (total enrolled, submitted, on-time, late, and missing counts) are pre-aggregated before slicing the paginated roster, eliminating partial-page statistical skew.
+* Class submissions roster queries leverage time-ordered UUIDv7 primary keys on `Student` records (`WHERE id < cursor`) to provide constant-time $O(1)$ seek latency instead of degrading $O(N)$ SQL table scans.
+* Full class submission KPIs (total enrolled, submitted, on-time, late, and missing counts) are pre-aggregated before slicing the paginated roster, eliminating partial-page statistical skew.
 * Supports bidirectional page navigation with in-memory cursor history stacks, per-page limit toggles (10, 25, 50), and server-side status/search filtering.
 
 ### 3.7. UUIDv7 Cursor-Based Pagination on Assessment Fetch

@@ -272,7 +272,7 @@ export const FeesDashboard: React.FC = () => {
         <StatCard
           title="Tuition Invoiced"
           value={formatGBP(stats.totalExpectedTuition)}
-          subtitle="Baseline liability across cohorts"
+          subtitle="Baseline liability across classes"
           icon={CreditCard}
           badge="Expected"
         />

@@ -94,7 +94,7 @@ export const AssessmentsDashboard: React.FC = () => {
       {/* Registry Header */}
       <PageHeader
         title="Coursework & Assessment Management"
-        description="Publish module coursework deliverables, establish strict submission deadlines, monitor cohort submission completion rates, and audit late submission tags."
+        description="Publish module coursework deliverables, establish strict submission deadlines, monitor class submission completion rates, and audit late submission tags."
         badge="Academic Registry • Coursework Operations"
         gradient="blue"
       >

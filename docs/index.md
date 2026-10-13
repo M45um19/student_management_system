@@ -58,7 +58,7 @@ To keep the codebase maintainable and strictly organized:
 | **Module 1: Student Enrolment & Programmes** | 🟢 Complete | [Overview](./features/enrolment/overview.md) • [API](./features/enrolment/api.md) • [Components](./features/enrolment/components.md) |
 | **Module 2: Fees & Payments Ledger** | 🟢 Complete | [Overview](./features/fees/overview.md) • [API](./features/fees/api.md) • [Components](./features/fees/components.md) |
 | **Module 3: Assessment Submission** | 🟢 Complete | [Overview](./features/assessments/overview.md) • [API](./features/assessments/api.md) • [Components](./features/assessments/components.md) |
-| **Module 4: Marksheet & Results** | ⚪ Planned | Overview • API • Components |
+| **Module 4: Marksheet & Results** | 🟢 Complete | [Overview](./features/grades/overview.md) • [API](./features/grades/api.md) • [Components](./features/grades/components.md) |
 
 ---
 

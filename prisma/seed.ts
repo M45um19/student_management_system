@@ -120,6 +120,30 @@ async function main() {
     },
   });
 
+  const aliceSubmission = await prisma.submission.create({
+    data: {
+      assessmentId: csAssessment.id,
+      studentId: aliceStudent.id,
+      fileUrl: '/uploads/sample-alice-submission.pdf',
+      fileName: 'alice_johnson_algorithms_coursework.pdf',
+      submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      isLate: false,
+    },
+  });
+
+  await prisma.grade.create({
+    data: {
+      assessmentId: csAssessment.id,
+      studentId: aliceStudent.id,
+      submissionId: aliceSubmission.id,
+      gradedById: staffProfile.id,
+      numericGrade: 88.0,
+      classification: 'Distinction',
+      isPublished: true,
+      publishedAt: new Date(),
+    },
+  });
+
   // Student 2: Brian Smith (Partial payment, OVERDUE balance flagged)
   const brianUser = await prisma.user.create({
     data: {
