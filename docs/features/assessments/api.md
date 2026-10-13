@@ -108,7 +108,7 @@ Creates a new coursework deliverable for a degree programme.
 
 ## 3. `GET /api/assessments/[id]`
 
-Retrieves single assessment specifications and cohort completion metrics.
+Retrieves single assessment specifications and class completion metrics.
 Students receive a `404 Not Found` if the assessment is archived (`isActive: false`).
 
 * **Method:** `GET`
@@ -128,7 +128,7 @@ Enrolled student submits coursework deliverables (.pdf, .docx, .doc).
 
 ## 5. `GET /api/assessments/[id]/submissions`
 
-Staff reviews cohort submission status, download links, timestamps, and late tags.
+Staff reviews class submission status, download links, timestamps, and late tags.
 Supports $O(1)$ UUIDv7 cursor-based pagination.
 
 * **Method:** `GET`

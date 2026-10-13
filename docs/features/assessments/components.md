@@ -48,11 +48,11 @@ graph TD
   * Degree Programme & Module code pills.
   * Coursework title and official deadline.
   * Live deadline countdown badge (green on-time, amber due soon, red deadline passed) or `Archived` pill.
-  * Cohort progress bar: `X of Y submitted (Z%)`.
+  * Class progress bar: `X of Y submitted (Z%)`.
   * Late submissions count alert.
   * Segmented status filter: `[All]`, `[Active]`, `[Past Deadline]`, `[Archived]`.
   * Card Actions:
-    * Navigate to cohort roster inspection (`Inspect Cohort Roster`).
+    * Navigate to class roster inspection (`Inspect Class Roster`).
     * Active cards: **Archive** button (soft delete setting `isActive: false`).
     * Archived cards: **Restore** button (re-enables assessment setting `isActive: true`).
   * Pagination Footer:
@@ -76,8 +76,8 @@ graph TD
 * **Route:** `/staff/assessments/[id]`
 * **Role:** Staff submission audits.
 * **Presentation:**
-  * Cohort KPIs (total enrolled, submitted count, late submission count, submission percentage).
-  * Cohort submission roster with student profile, deliverable download links, submission timestamps, and late tags.
+  * Class KPIs (total enrolled, submitted count, late submission count, submission percentage).
+  * Class submission roster with student profile, deliverable download links, submission timestamps, and late tags.
   * Cursor-based pagination with UUIDv7 seeks, per-page selector, and status/search filters.
 * **Hook Integration:** `useAssessmentSubmissions()`.
 

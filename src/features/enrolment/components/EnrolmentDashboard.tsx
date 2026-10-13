@@ -194,7 +194,7 @@ export const EnrolmentDashboard: React.FC = () => {
         <StatCard
           title="Actively Enrolled"
           value={stats.enrolled}
-          subtitle="Active academic cohorts"
+          subtitle="Active student classes"
           icon={CheckCircle2}
           badge="Active"
         />

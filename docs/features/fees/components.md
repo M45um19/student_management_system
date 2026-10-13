@@ -16,7 +16,7 @@ src/features/fees/components/
 │   ├── OverdueAccountsTable.tsx    # Debt monitoring view with urgency tags & actions
 │   └── StudentFeeLedgerView.tsx    # Student statement lookup & breakdown view
 ├── RecordPaymentModal.tsx          # Payment recording modal with real-time balance feedback
-├── PaymentReceiptModal.tsx         # Official printable transaction voucher
+├── PaymentReceiptModal.tsx         # Official electronic transaction voucher
 └── StudentFeeLedgerView.tsx        # Reusable statement view for student & staff portals
 ```
 
@@ -59,8 +59,8 @@ Official electronic confirmation voucher for payment transactions.
   * Receipt voucher number & unique reference code.
   * Student identification: Full Name, Student ID, Email, Degree Programme.
   * Formatted payment amount in GBP.
-  * Authorizing staff member signature line.
-  * Native print support (`window.print()`) with print-optimized styling (`print:hidden`, `print:p-0`).
+  * Authorizing registry staff member identification.
+  * Clean electronic voucher presentation with responsive modal layout.
 
 ### 2.4. `PaymentLedgerTable.tsx`
 Central table displaying all verified transactions across the institution.
@@ -85,7 +85,6 @@ Shared statement of account view utilized both in the Student Portal (`/student/
   * Status Badge: `Paid in Full` (Emerald), `Partially Paid` (Amber), `Unpaid / Overdue` (Rose).
   * Animated progress bar displaying settlement percentage.
   * Audit trail table of all payments credited to this student with individual electronic receipt viewers.
-  * Print statement button.
 
 ---
 

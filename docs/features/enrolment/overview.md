@@ -43,7 +43,7 @@ sequenceDiagram
 ### 3.1. Zero-Padded Sequential Student ID Generation
 * **Identifier Specification:** `SMS-YYYY-XXXX` (e.g. `SMS-2025-0001`, `SMS-2025-0006`).
 * **Intake Partitioning:** The 4-digit `YYYY` segment is resolved dynamically from the student's **Academic Intake Year** string (e.g. `"2024/2025"` or `"2025"`). The resolver extracts the 4-digit intake year via regex, defaulting to the current calendar year if not parsed.
-* **Open String Input:** In the enrolment form modal, Academic Intake Year is entered as a free-form string to support flexible institutional cohort formats, without restricting administrators to a static dropdown.
+* **Open String Input:** In the enrolment form modal, Academic Intake Year is entered as a free-form string to support flexible institutional class formats, without restricting administrators to a static dropdown.
 * **Concurrency Protection:** The ID generator queries the active sequence and wraps creation within an atomic database transaction (`prisma.$transaction`) to eliminate collision risks.
 
 ### 3.2. Automated Student Portal Provisioning
@@ -67,7 +67,7 @@ A student profile transitions through four discrete states:
 * **Time-Ordered Primary Keys:** All entity primary keys in the database utilize time-ordered **UUIDv7** (`@default(uuid(7))`). Because the Unix millisecond timestamp is embedded in the high 48 bits of the UUID, lexicographical ordering (`ORDER BY id DESC`) matches exact chronological creation time.
 * **$O(1)$ B-Tree Index Seeking:** Traditional offset-based pagination (`OFFSET N`) suffers from severe $O(N)$ query degradation as tables grow to hundreds of thousands of rows. In contrast, UUIDv7 cursor pagination seeks directly against PostgreSQL's primary key B-Tree index:
   $$\text{WHERE id} < \text{cursor ORDER BY id DESC LIMIT } K + 1$$
-* **Next & Previous Navigation:** The backend fetches `limit + 1` rows to calculate `hasNextPage` and extracts the final item's UUIDv7 as `nextCursor`. The frontend preserves a cursor history stack, allowing bidirectional Next/Previous navigation with zero performance degradation on arbitrarily large cohorts.
+* **Next & Previous Navigation:** The backend fetches `limit + 1` rows to calculate `hasNextPage` and extracts the final item's UUIDv7 as `nextCursor`. The frontend preserves a cursor history stack, allowing bidirectional Next/Previous navigation with zero performance degradation on arbitrarily large classes.
 
 ---
 

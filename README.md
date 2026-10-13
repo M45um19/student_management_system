@@ -83,7 +83,7 @@ flowchart LR
   * High-performance $O(1)$ UUIDv7 cursor-based pagination with bidirectional forward/backward history navigation on transactions and overdue debt tracking.
   * Institutional financial metrics computation: Total Invoiced Tuition, Total Collected, Outstanding Debt, and Collection Rate %.
   * Urgency-tiered debt tracking (`Critical`, `Elevated`, `Moderate`) with quick "Record Payment" actions.
-  * Student Statement of Account lookup with printable official electronic payment receipts.
+  * Student Statement of Account lookup with official electronic payment receipts.
 * **API Endpoints:**
   * `GET /api/payments` — Lists institutional payment transactions with search, student filtering, and UUIDv7 cursor pagination.
   * `POST /api/payments` — Records payment transaction with atomic reference uniqueness verification.
@@ -102,40 +102,43 @@ flowchart LR
   * Enforces single submission constraint per student per assessment (`@@unique([assessmentId, studentId])`).
   * Resubmissions allowed prior to deadline, safely overwriting existing deliverable without duplicate database records.
   * Late submissions accepted past deadline but permanently tagged with `isLate = true` and flagged on Staff review rosters.
-  * Staff inspection dashboard with cohort completion rates, real-time submission progress bars, and direct deliverable download links.
+  * Staff inspection dashboard with class completion rates, real-time submission progress bars, and direct deliverable download links.
   * High-performance $O(1)$ UUIDv7 cursor-based pagination on assessment and submission fetches with bidirectional forward/backward history navigation, per-page selector, and server-side status/search filtering.
   * Soft delete / Archive mechanism (`isActive: false`): replacing hard delete to preserve academic submissions and audit integrity while completely hiding archived assessments from normal rosters and the student portal.
   * Dedicated `[Archived]` filter tab beside `[Past Deadline]` in Staff Dashboard with single-click restoration (`isActive: true`).
 * **API Endpoints:**
   * `GET /api/assessments` — Lists assessments filtered by module/programme with role-scoped submission context, status filters (`all`, `active`, `passed`, `archived`), and UUIDv7 cursor pagination.
   * `POST /api/assessments` — Staff creates a coursework assessment with deadline.
-  * `GET /api/assessments/[id]` — Retrieves assessment specifications, deadline countdown, and cohort metrics (404 for students if archived).
+  * `GET /api/assessments/[id]` — Retrieves assessment specifications, deadline countdown, and class metrics (404 for students if archived).
   * `DELETE /api/assessments/[id]` — Staff archives an assessment (soft delete setting `isActive: false`, guarded against finalized grades).
   * `PATCH /api/assessments/[id]` — Staff toggles active / archived state (`isActive: true | false`).
   * `POST /api/assessments/[id]/submit` — Student submits coursework file (with multipart upload, resubmission & late detection).
-  * `GET /api/assessments/[id]/submissions` — Staff reviews cohort submissions roster with UUIDv7 cursor pagination, timestamps, and late tags.
+  * `GET /api/assessments/[id]/submissions` — Staff reviews class submissions roster with UUIDv7 cursor pagination, timestamps, and late tags.
 
 ---
 
 ### Module 4: Marksheet & Results
 
-* **Status:** `Planned`
-
+* **Status:** `Complete`
 * **Dependency:** Depends on Module 3 — grades are awarded against submitted student coursework.
 * **Features:**
-  * Staff enters numeric grades ($0–100$) per student per assessment.
-  * Automatic UK university classification:
-    * **Distinction:** $\ge 70$
-    * **Merit:** $60 - 69$
-    * **Pass:** $40 - 59$
-    * **Fail:** $< 40$
-  * Granular publish/withhold control per student.
-  * Student marksheet strictly gated: unpublished grades remain hidden until published.
+  * Staff enters numeric grades ($0–100$) per student per assessment with interactive slider and dynamic real-time classification preview.
+  * Automatic UK university degree classification:
+    * **Distinction (First Class Honours):** $\ge 70$
+    * **Merit (Upper Second Class 2:1):** $60 - 69$
+    * **Pass (Third Class / Pass):** $40 - 59$
+    * **Fail (Resit Required):** $< 40$
+  * Granular per-student and one-click class-wide bulk publish/withhold control across assessment deliverables.
+  * Strict database-level gating: student marksheet queries filter `isPublished: true`, keeping draft marks under Board of Examiners moderation completely hidden from students until formally released.
+  * Official electronic academic transcript with cumulative GPA, degree award classification, modules passed breakdown, and institutional grading scale key.
+  * Class performance analytics: institutional average mark, pass rate %, distinction/merit rate %, and grade distribution.
 * **API Endpoints:**
-  * `POST /api/grades` — Staff records/updates numeric grade (computes classification).
+  * `GET /api/grades` — Staff lists institutional grades with search, filters, KPIs, and UUIDv7 cursor pagination.
+  * `POST /api/grades` — Staff records/updates numeric grade (computes classification, links deliverable if present).
   * `PATCH /api/grades/[id]/publish` — Staff toggles publication status (`isPublished: true | false`).
-  * `GET /api/students/[id]/marksheet` — Student marksheet (returns only published results).
-  * `GET /api/assessments/[id]/grades` — Staff grade overview for the assessment.
+  * `POST /api/grades/bulk-publish` — Staff bulk publishes/withholds all awarded grades for an assessment deliverable.
+  * `GET /api/assessments/[id]/grades` — Staff class grade overview and performance metrics for the assessment.
+  * `GET /api/students/[id]/marksheet` — Official student marksheet (strictly gates unpublished draft marks for students).
 
 ---
 
@@ -263,18 +266,20 @@ classDiagram
 | **Enrolment** | Flexible intake year formats | Academic Intake Year is an open string; `resolveTargetYear()` parses 4-digit years for ID prefixing. |
 | **Enrolment** | Concurrent ID generation collision | Atomic, zero-padded sequence generation per academic year (`SMS-YYYY-XXXX`) inside Prisma transactions. |
 | **Enrolment** | Student withdrawal (`Withdrawn`) | Preserves payment ledger and submission history without cascading deletes. |
-| **Enrolment** | Large cohort query latency | UUIDv7 time-ordered primary keys enable $O(1)$ B-Tree index seeking (`WHERE id < cursor`) instead of degrading $O(N)$ table offsets. |
+| **Enrolment** | Large student body query latency | UUIDv7 time-ordered primary keys enable $O(1)$ B-Tree index seeking (`WHERE id < cursor`) instead of degrading $O(N)$ table offsets. |
 | **Fees** | Overdue debt detection | Flags any student with an outstanding balance $> 0$ with tiered urgency classification (`Critical`, `Elevated`, `Moderate`). |
 | **Fees** | Duplicate payment reference numbers | Enforces `@unique` reference numbers at database level and returns `409 Conflict` if duplicate reference is submitted. |
 | **Fees** | High-volume transaction & overdue latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation. |
-| **Fees** | Institutional financial KPI integrity | Aggregates overall invoiced tuition, collected revenue, and outstanding debt across the entire cohort before slicing overdue paginated lists, preventing partial-page data skew. |
+| **Fees** | Institutional financial KPI integrity | Aggregates overall invoiced tuition, collected revenue, and outstanding debt across the entire student body before slicing overdue paginated lists, preventing partial-page data skew. |
 | **Assessments** | Resubmission before deadline | Overwrites previous upload, updates timestamp, and maintains single submission constraint. |
 | **Assessments** | Submissions past deadline | Accepted but tagged with `isLate = true` and highlighted in staff dashboard. |
 | **Assessments** | Large coursework catalogue query latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation on assessment fetch. |
-| **Assessments** | Large cohort submission query latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation on submissions roster. |
-| **Assessments** | Cohort submission KPI integrity | Aggregates overall enrolled students, submitted deliverables, on-time, late, and missing counts across the entire cohort before slicing paginated lists, preventing partial-page data skew. |
+| **Assessments** | Large class submission query latency | UUIDv7 cursor-based seek (`ORDER BY id DESC`) enables $O(1)$ index lookup with bidirectional history stack, avoiding $O(N)$ SQL offset degradation on submissions roster. |
+| **Assessments** | Class submission KPI integrity | Aggregates overall enrolled students, submitted deliverables, on-time, late, and missing counts across the entire class before slicing paginated lists, preventing partial-page data skew. |
 | **Assessments** | Coursework archival & soft deletion | Deletions toggle `isActive = false`, preserving historical student uploads and grading audits while hiding archived items from students and active rosters, with single-click restoration. |
-| **Results** | Withheld marksheet | Database query for student marksheet filters `isPublished: true`, hiding draft marks. |
+| **Results** | Withheld marksheet | Database query for student marksheet filters `isPublished: true`, hiding draft marks from students until ratified. |
+| **Results** | Duplicate assessment grades | Enforces composite unique constraint `@@unique([assessmentId, studentId])` with atomic upsert operations. |
+| **Results** | Bulk publication audit trail | Updates `publishedAt = now()` on publish and clears on withhold, maintaining synchronization between Board decisions and student view. |
 
 ---
 

@@ -293,7 +293,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({
                     href={`/staff/assessments/${assessment.id}`}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0269ae] hover:text-[#01538c] dark:text-[#43b5e9] dark:hover:text-[#38a3d4]"
                   >
-                    <span>Inspect Cohort Roster</span>
+                    <span>Inspect Class Roster</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </Link>
 

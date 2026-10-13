@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const staff = await requireStaff(req);
     if (!staff) {
-      return apiError('Forbidden. Only Registry Staff can inspect cohort submissions.', 403);
+      return apiError('Forbidden. Only Registry Staff can inspect class submissions.', 403);
     }
 
     const { id: assessmentId } = await params;
@@ -295,7 +295,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         },
         pagination: paginationMeta,
       },
-      'Cohort submissions retrieved successfully.',
+      'Class submissions retrieved successfully.',
       {
         pagination: paginationMeta,
       }
