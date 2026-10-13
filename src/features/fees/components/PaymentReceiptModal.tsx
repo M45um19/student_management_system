@@ -3,7 +3,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { 
-  Printer, 
   CheckCircle2, 
   CreditCard, 
   Calendar, 
@@ -26,10 +25,6 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
 }) => {
   if (!payment) return null;
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const student = payment.student;
   const formattedDate = new Date(payment.paymentDate).toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -46,10 +41,10 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
       maxWidth="lg"
     >
       <div className="space-y-6">
-        {/* Printable Voucher Shell */}
+        {/* Electronic Voucher Shell */}
         <div 
           id="payment-receipt-content"
-          className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-6 print:p-0 print:border-none print:shadow-none"
+          className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-6"
         >
           {/* Header with Logo & Institution Stamp */}
           <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 pb-5">
@@ -162,22 +157,13 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 print:hidden">
+        <div className="flex items-center justify-end pt-2 border-t border-zinc-100 dark:border-zinc-800">
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors"
           >
             Close Receipt
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#0269ae] hover:bg-[#015289] text-white shadow-xs transition-all active:scale-95"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Receipt</span>
           </button>
         </div>
       </div>

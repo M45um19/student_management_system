@@ -132,7 +132,7 @@ export const OverdueAccountsTable: React.FC<OverdueAccountsTableProps> = ({
                     <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
                       {filters.search
                         ? 'No overdue accounts match your active search filter.'
-                        : 'There are currently zero outstanding fee balances across the registry cohorts.'}
+                        : 'There are currently zero outstanding fee balances across all student classes.'}
                     </p>
                   </td>
                 </tr>

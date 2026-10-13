@@ -107,6 +107,6 @@ Detailed student record drawer:
 
 ### 3.6. `ProgrammeList.tsx` & `CreateProgrammeModal.tsx`
 Degree curriculum grid:
-* Card view detailing programme code, name, annual tuition fee, and active student cohort size.
+* Card view detailing programme code, name, annual tuition fee, and active student class size.
 * Quick action to filter the student directory by the selected programme.
 * Dedicated modal dialog for Registry Administrators to create new programmes.

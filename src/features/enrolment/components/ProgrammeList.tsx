@@ -25,7 +25,7 @@ export const ProgrammeList: React.FC<ProgrammeListProps> = ({
             Offered Degree Programmes
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Institutional curriculum, baseline tuition fees, and active cohort sizes.
+            Institutional curriculum, baseline tuition fees, and active class sizes.
           </p>
         </div>
 

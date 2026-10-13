@@ -4,7 +4,7 @@ import { AssessmentDetailView } from '@/features/assessments';
 
 export const metadata: Metadata = {
   title: 'Assessment Submissions Roster — Student Management System',
-  description: 'Inspect cohort submission status, download deliverables, and review late tags.',
+  description: 'Inspect class submission status, download deliverables, and review late tags.',
 };
 
 interface PageProps {

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { 
   Receipt, 
-  Printer, 
   Loader2, 
   Plus 
 } from 'lucide-react';
@@ -39,10 +38,6 @@ export const StudentFeeLedgerView: React.FC<StudentFeeLedgerViewProps> = ({
   const statusBadge = getPaymentStatusBadge(paymentStatus);
   const percentPaid = tuitionFee > 0 ? Math.min(100, Math.round((totalPaid / tuitionFee) * 100)) : 100;
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="space-y-6">
       {/* Payer Summary & Financial Status Banner */}
@@ -63,7 +58,7 @@ export const StudentFeeLedgerView: React.FC<StudentFeeLedgerViewProps> = ({
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {programme?.name} ({programme?.code}) • Cohort: {student.academicYear || 'Current'}
+                {programme?.name} ({programme?.code}) • Class: {student.academicYear || 'Current'}
               </p>
             </div>
           </div>
@@ -86,15 +81,6 @@ export const StudentFeeLedgerView: React.FC<StudentFeeLedgerViewProps> = ({
                 <span>Record Payment</span>
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors"
-              title="Print Statement"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
           </div>
         </div>
 

@@ -79,7 +79,7 @@ Students with overdue debt are categorized into three operational urgency tiers:
 ### 3.6. UUIDv7 Cursor-Based High-Performance Pagination
 * **$O(1)$ B-Tree Index Seeking:** The payment ledger (`Payment.id`) utilizes time-sortable UUIDv7 identifiers. By querying with `cursor: { id }`, `take: limit + 1`, and `skip: 1`, pagination achieves constant-time index traversal without the severe performance degradation of high-offset SQL scans (`OFFSET N`).
 * **Bidirectional History Stack:** The UI manages a local navigational stack `cursorHistory: (string | null)[]` enabling instant backward and forward traversing (`nextCursor`, `prevCursor`).
-* **Overdue Cohort Pagination:** The overdue debts endpoint aggregates high-level institutional financial statistics across the entire cohort before slicing the paginated student list, ensuring financial metric cards display exact institutional balances without partial-page truncation.
+* **Overdue Student Debt Pagination:** The overdue debts endpoint aggregates high-level institutional financial statistics across the entire student body before slicing the paginated student list, ensuring financial metric cards display exact institutional balances without partial-page truncation.
 
 ---
 

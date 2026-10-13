@@ -10,6 +10,7 @@ import {
   Clock,
   AlertTriangle,
   Loader2,
+  GraduationCap,
 } from 'lucide-react';
 
 interface AssessmentDetailViewProps {
@@ -89,7 +90,7 @@ export const AssessmentDetailView: React.FC<AssessmentDetailViewProps> = ({ asse
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0269ae]" />
-        <p className="text-xs text-zinc-500 font-medium">Retrieving cohort assessment roster...</p>
+        <p className="text-xs text-zinc-500 font-medium">Retrieving class assessment roster...</p>
       </div>
     );
   }
@@ -150,8 +151,15 @@ export const AssessmentDetailView: React.FC<AssessmentDetailViewProps> = ({ asse
             </p>
           </div>
 
-          {/* Deadline Pill */}
-          <div className="flex flex-col items-start md:items-end gap-1">
+          {/* Deadline Pill & Marksheet Action */}
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <Link
+              href="/staff/marksheet"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-[#0269ae] dark:text-[#43b5e9] bg-[#0269ae]/10 hover:bg-[#0269ae]/20 border border-[#0269ae]/30 transition-colors shadow-2xs"
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Marksheet Board</span>
+            </Link>
             <span
               className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
                 deadlineStatus.isPastDeadline
@@ -251,7 +259,7 @@ export const AssessmentDetailView: React.FC<AssessmentDetailViewProps> = ({ asse
       {/* Cohort Submissions Roster Table */}
       <div>
         <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-3">
-          Cohort Submission Roster
+          Class Submission Roster
         </h2>
         <AssessmentSubmissionsTable
           roster={roster}
