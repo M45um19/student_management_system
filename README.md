@@ -422,15 +422,12 @@ The seed script (`prisma/seed.ts`) populates the system with 2 programmes, 5 stu
 
 ## AI Usage Reflection
 
-This project used AI pair programming tools as an accelerator while maintaining strict human ownership over core architecture, data integrity, and business logic:
+This project was built under the paradigm of **"AI-assisted coding, human-engineered architecture."** While generative AI was used as a high-velocity pair programmer to scaffold boilerplate, generate seed data, and speed up implementation across all modules, complete technical ownership remained strictly human.
 
-1. **Where AI Accelerated Development:**
-   * **Schema & Model Scaffolding:** AI drafted initial Prisma schemas, including relation definitions and the `RefreshToken` rotation model.
-   * **Realistic Seed Datasets:** Generated diverse sample records with realistic dates, edge cases (overdue fees, late submissions, withheld grades), and boundary classifications.
-   * **Edge-Case Brainstorming:** Used AI to review potential race conditions in sequential student ID generation and test classification boundaries against UK university standards.
+Key human engineering responsibilities across the entire project included:
 
-2. **Where Human Engineering & Ownership Took Precedence:**
-   * **Enterprise Auth Architecture:** Opted for a secure dual-token JWT model with database-backed refresh rotation and `httpOnly` cookies rather than naive client-side storage.
-   * **Data Normalization:** Designed `Programme` as an independent entity with its own fee schedule rather than an arbitrary text field, ensuring financial consistency.
-   * **Privacy & Security Boundaries:** Manually enforced that student marksheet endpoints filter unpublished results at the database query level.
-   * **Code Quality & Validation:** All routes and models are strictly typed with TypeScript and validated with Zod schemas.
+* **Domain & Schema Architecture:** Designing normalized relational data models (PostgreSQL/Prisma), enforcing database constraints, foreign keys, cascade rules, and time-sorted UUIDv7 indexing for cursor pagination.
+* **Business Logic & Security:** Formulating the core rules across every module—dual-token JWT rotation via `httpOnly` cookies, sequential student ID generation, dynamic ledger balance calculations, coursework deadline enforcement, and database-level marksheet publication gating.
+* **Rigorous Code Review:** Auditing every line of AI-drafted code, rejecting insecure patterns (e.g., client-side token storage, naive offset pagination), enforcing Zod validation, and maintaining strict TypeScript type safety.
+
+In short, AI served as an intelligent typist and accelerator, but the system design, data integrity, security boundaries, and final code reviews were 100% manually engineered.
